@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BOP Quick Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a statistical-bulletin workbook. Sticky activity index on top, one activity sheet at a time, ledger-style tables with red debits and dark credits. */
+:root{
+  --paper:#f6f8f9; --sheet:#ffffff; --ink:#14232b; --muted:#56656d; --rule:#d5dde1; --tint:#e6f2f5;
+  --teal:#007fa3; --teal-ink:#00627e; --debit:#b02a30; --credit:#1f6b45; --warn:#9a6a00;
+  --font-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Source Sans 3","Segoe UI",Arial,sans-serif;
+  --font-data:"IBM Plex Mono",Consolas,"Courier New",monospace;
+  --chart-grid:#e3e9ec; --series-a:#007fa3; --series-b:#b02a30;
+  --radius:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0f1a1f; --sheet:#152329; --ink:#e4edf0; --muted:#9fb0b7; --rule:#2b3e46; --tint:#183640;
+  --teal:#3fb6d6; --teal-ink:#7fd0e6; --debit:#ef7b7f; --credit:#6fcf9b; --warn:#e2b55a;
+  --chart-grid:#24363e; --series-a:#3fb6d6; --series-b:#ef7b7f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0f1a1f; --sheet:#152329; --ink:#e4edf0; --muted:#9fb0b7; --rule:#2b3e46; --tint:#183640;
+  --teal:#3fb6d6; --teal-ink:#7fd0e6; --debit:#ef7b7f; --credit:#6fcf9b; --warn:#e2b55a;
+  --chart-grid:#24363e; --series-a:#3fb6d6; --series-b:#ef7b7f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:24px 64px}
+header.top{display:grid;gap:6px;margin-bottom:18px}
+.eyebrow{font-family:var(--font-data);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-ink)}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1;margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+nav.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:10px;border-bottom:1px solid var(--rule);margin-bottom:22px}
+nav.index ol{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.index button{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:.02em;white-space:nowrap;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);padding:6px 12px;border-radius:var(--radius);cursor:pointer;display:flex;gap:8px;align-items:center}
+nav.index button[aria-selected="true"]{background:var(--teal);border-color:var(--teal);color:var(--sheet)}
+nav.index .tick{font-family:var(--font-data);font-size:11px;font-weight:500;opacity:.85}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+section.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--radius);padding:22px clamp(16px,3vw,32px) 28px}
+.sheet-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 20px;margin-bottom:6px}
+h2{font-family:var(--font-display);font-size:32px;line-height:1.05;margin:0}
+.slides{font-family:var(--font-data);font-size:12px;color:var(--muted)}
+.brief{color:var(--muted);max-width:70ch;margin:4px 0 18px}
+.score{font-family:var(--font-data);font-size:14px;background:var(--tint);color:var(--teal-ink);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.btn{font-family:var(--font-body);font-weight:600;font-size:15px;border-radius:var(--radius);padding:8px 14px;cursor:pointer;border:1px solid var(--teal);background:var(--teal);color:var(--sheet)}
+.btn.ghost{background:transparent;color:var(--teal-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chip{font-family:var(--font-body);font-size:15px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:var(--radius);padding:7px 12px;cursor:pointer;text-align:left}
+.chip[aria-pressed="true"]{border-color:var(--teal);background:var(--tint);color:var(--teal-ink);font-weight:600}
+.chip.right{border-color:var(--credit);color:var(--credit);background:transparent;font-weight:600}
+.chip.wrong{border-color:var(--debit);color:var(--debit);background:transparent;text-decoration:line-through}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.feedback{border-left:3px solid var(--rule);padding:8px 12px;margin-top:12px;background:var(--paper);border-radius:0 var(--radius) var(--radius) 0;min-height:1em}
+.feedback.ok{border-left-color:var(--credit)} .feedback.no{border-left-color:var(--debit)}
+.feedback strong.ok{color:var(--credit)} .feedback strong.no{color:var(--debit)}
+.label{font-family:var(--font-data);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.num{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.debit{color:var(--debit)} .credit{color:var(--credit)}
+.scroll{overflow-x:auto}
+table.ledger{border-collapse:collapse;width:100%;font-size:14px}
+table.ledger th,table.ledger td{border-bottom:1px solid var(--rule);padding:6px 8px;text-align:right;white-space:nowrap}
+table.ledger th:first-child,table.ledger td:first-child{text-align:left;white-space:normal}
+table.ledger thead th{font-family:var(--font-data);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+table.ledger tfoot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:none}
+
+/* Ledger lab */
+.lab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px}
+@media (max-width:820px){.lab{grid-template-columns:1fr}}
+.voucher{border:1px dashed var(--teal);border-radius:var(--radius);padding:14px 16px;background:var(--tint)}
+.voucher .vno{font-family:var(--font-data);font-size:12px;color:var(--teal-ink)}
+.voucher p{font-size:18px;margin:6px 0 0;font-weight:600}
+.voucher .amt{font-family:var(--font-data);font-size:14px;color:var(--muted);margin-top:4px}
+
+/* Books */
+.books td input{width:7.5ch;font-family:var(--font-data);font-size:14px;text-align:right;padding:3px 6px;border:2px solid var(--teal);border-radius:4px;background:var(--sheet);color:var(--ink)}
+
+/* Charts */
+.chart{width:100%;height:auto;display:block;touch-action:manipulation}
+.chart text{fill:var(--muted);font-family:var(--font-data);font-size:11px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin:6px 0}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px}
+.tasks{display:grid;gap:8px;margin-bottom:10px}
+.task{display:flex;gap:10px;align-items:flex-start}
+.task .st{font-family:var(--font-data);font-size:12px;min-width:5.5ch;padding-top:2px}
+.tip{font-family:var(--font-data);font-size:13px;color:var(--ink);min-height:1.5em}
+.detective{display:grid;gap:26px}
+.case{border-top:1px solid var(--rule);padding-top:16px}
+.case:first-child{border-top:none;padding-top:0}
+h3{font-family:var(--font-display);font-size:22px;margin:0 0 4px}
+
+/* J-curve */
+.sim{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:24px}
+@media (max-width:820px){.sim{grid-template-columns:1fr}}
+.ctl{display:grid;gap:12px;align-content:start;align-self:start}
+.ctl label{display:grid;gap:2px;font-size:14px}
+.ctl label span{display:flex;justify-content:space-between}
+.ctl input[type=range]{width:100%;accent-color:var(--teal)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:10px}
+.readout div{border:1px solid var(--rule);border-radius:var(--radius);padding:8px 10px}
+.readout b{display:block;font-family:var(--font-data);font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.readout small{color:var(--muted);font-size:12px}
+.challenge{display:flex;gap:10px;align-items:center;font-size:15px}
+.challenge .box{width:20px;height:20px;border:2px solid var(--rule);border-radius:4px;display:grid;place-items:center;font-size:13px;flex:none}
+.challenge.done .box{border-color:var(--credit);background:var(--credit);color:var(--sheet)}
+
+/* Match + sort */
+.match{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:720px){.match{grid-template-columns:1fr}}
+.col{display:grid;gap:8px;align-content:start}
+.pair-tag{font-family:var(--font-data);font-size:12px;color:var(--teal-ink);margin-left:6px}
+ol.sorter{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+ol.sorter li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--rule);border-radius:var(--radius);padding:8px 10px;background:var(--sheet)}
+ol.sorter li.right{border-color:var(--credit)} ol.sorter li.wrong{border-color:var(--debit)}
+.pos{font-family:var(--font-data);font-size:13px;color:var(--muted);width:2ch;text-align:right}
+.mv{display:flex;gap:4px}
+.mv button{border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:4px;width:34px;height:30px;cursor:pointer;font-size:14px}
+.era-date{font-family:var(--font-data);font-size:13px;color:var(--teal-ink)}
+
+/* Quiz */
+.q{border-top:1px solid var(--rule);padding-block:16px}
+.q:first-of-type{border-top:none}
+.q .stem{font-weight:600;margin:0 0 8px}
+.q .qn{font-family:var(--font-data);font-size:12px;color:var(--muted)}
+.opts{display:grid;gap:6px}
+footer{color:var(--muted);font-size:13px;margin-top:20px;max-width:80ch}
+@media (prefers-reduced-motion:no-preference){.chip,.btn,nav.index button{transition:background-color .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">International Finance · Lecture 3 · Balance of Payments</span>
+  <h1>Quick Quiz</h1>
+  <p class="lede">Nine questions on balance of payments accounting, the current and financial accounts, exchange rate regimes and capital flows.</p>
+</header>
+<main>
+<section class="sheet" id="quiz" data-name="Quick Quiz">
+  <div class="sheet-head"><span class="slides-h"></span><span class="score" id="q-score">0 / 9</span></div>
+  <div class="slides">Slides 1–40</div>
+  <p class="brief">One attempt per question. The explanation appears after you answer.</p>
+  <div id="quiz-list"></div>
+  <div class="row" style="margin-top:10px"><button class="btn ghost" id="q-reset">Reset quiz</button></div>
+</section>
+</main>
+<footer>Data: IMF Balance of Payments Statistics via World Bank, World Development Indicators (updated 13 July 2026; accessed 2 October 2026). Financial account excludes reserves and uses the textbook sign convention (+ = net inflow) unless stated. Figures in billions of U.S. dollars.</footer>
+</div>
+<script>
+const markDone = () => {};
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
+const fmt = v => { const s = Math.abs(v).toLocaleString('en-GB', {maximumFractionDigits: 1}); return v < 0 ? '−' + s : s; };
+const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const store = { get(k, d) { try { const v = localStorage.getItem('boplab:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('boplab:' + k, JSON.stringify(v)); } catch (e) {} } };
+
+
+/* ---------- 7 quiz ---------- */
+const QUIZ = [
+  ['In balance of payments accounting, a credit records…', ['Foreign exchange spent, such as paying for imports', 'Foreign exchange earned, such as receipts from exports', 'Any increase in a country’s official reserves', 'A transaction that has not yet been settled'], 1, 'A credit is an inflow of foreign exchange to the country, for example from the export of a good or service (slide 5).'],
+  ['Which of these is NOT part of the current account?', ['Exports of software services', 'Dividends paid to foreign shareholders', 'Remittances sent abroad by migrant workers', 'Debt forgiveness by the government'], 3, 'Debt forgiveness is a capital transfer and belongs in the capital account. The others are services, primary income and secondary income.'],
+  ['A foreign investor buys 12% of the voting shares of a U.S. company. How is it classified?', ['Portfolio investment', 'Direct investment', 'Other investment', 'Capital account transfer'], 1, 'Ownership of 10% or more of voting equity is direct investment because it implies some control (slides 15–16).'],
+  ['According to Exhibit 3.1, the U.S. current account balance in 2025 was about…', ['−$647 billion', '−$1,116 billion', '−$1,241 billion', '+$1,215 billion'], 1, '−$1,116bn. −$1,241bn is the goods balance alone, and +$1,215bn is the financial account surplus that financed it.'],
+  ['Why do the U.S. current account and financial account lines in Exhibit 3.4 look like mirror images?', ['Because the Federal Reserve targets the trade balance', 'Because a current account deficit must be financed by a net inflow of capital', 'Because exports and imports always grow at the same rate', 'Because the IMF adjusts the data to make them match'], 1, 'Double-entry bookkeeping: a deficit on the current account is matched by net borrowing (a surplus) on the financial account, apart from errors, omissions and reserves.'],
+  ['What happened to China’s financial account in 2015–2016?', ['A record twin surplus', 'Large net outflows as reserves fell', 'It was abolished under new capital controls', 'It was exactly zero'], 1, 'Net financial outflows of about $434bn and $416bn as private capital left and the PBoC sold reserves (Exhibit 3.5).'],
+  ['Under a fixed exchange rate, a balance of payments deficit is normally met by…', ['A depreciation of the currency', 'The central bank selling foreign exchange reserves', 'An automatic rise in exports', 'Higher net errors and omissions'], 1, 'Under a fixed rate the government must keep the BOP near zero, using reserves to buy its own currency (slide 25).'],
+  ['The Bretton Woods agreement promoted free movement of capital mainly for…', ['Capital account transactions such as foreign direct investment', 'Current account transactions such as payments for trade', 'Speculative portfolio flows', 'Gold exports only'], 1, 'Bretton Woods freed current account transactions but was more cautious about capital account flows (slide 32).'],
+  ['U.S. net errors and omissions were about −$138bn in 2023. What does a large value most likely indicate?', ['The U.S. ran a balance of payments crisis', 'Transactions that were missed or mismeasured somewhere in the accounts', 'A deliberate policy of hiding capital flows', 'A change in the sign convention'], 1, 'Errors and omissions is a balancing item. Large values remind us that BOP data are estimates built from many surveys.'],
+];
+let qAns = {};
+function quizBuild() {
+  const box = $('#quiz-list'); box.innerHTML = '';
+  QUIZ.forEach(([stem, opts, ans, why], qi) => {
+    const fb = el('div', {class: 'feedback', 'aria-live': 'polite', hidden: ''});
+    const ob = el('div', {class: 'opts'});
+    opts.forEach((o, oi) => ob.append(el('button', {class: 'chip', onclick: () => {
+      if (qi in qAns) return; qAns[qi] = oi;
+      ob.querySelectorAll('.chip').forEach((c, ci) => { c.disabled = true; if (ci === ans) c.classList.add('right'); else if (ci === oi) c.classList.add('wrong'); });
+      fb.hidden = false; fb.className = 'feedback ' + (oi === ans ? 'ok' : 'no'); fb.innerHTML = ''; fb.append(el('strong', {class: oi === ans ? 'ok' : 'no'}, oi === ans ? 'Correct. ' : 'Not quite. '), why);
+      const sc = Object.entries(qAns).filter(([k, v]) => QUIZ[k][2] === v).length;
+      $('#q-score').textContent = `${sc} / ${QUIZ.length}`;
+      if (Object.keys(qAns).length === QUIZ.length) markDone('quiz');
+    }}, String.fromCharCode(65 + oi) + '.  ' + o)));
+    box.append(el('div', {class: 'q'}, el('div', {class: 'qn'}, `Question ${qi + 1}`), el('p', {class: 'stem'}, stem), ob, fb));
+  });
+}
+$('#q-reset').addEventListener('click', () => { qAns = {}; $('#q-score').textContent = `0 / ${QUIZ.length}`; quizBuild(); });
+
+
+quizBuild();
+</script>
+</body>
+</html>
